@@ -1,4 +1,4 @@
-module github.com/kkdai/youtube/v2
+module github.com/lvcoi/ytdl-lib/v2
 
 go 1.23.0
 

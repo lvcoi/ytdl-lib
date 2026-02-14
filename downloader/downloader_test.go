@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/kkdai/youtube/v2"
+	"github.com/lvcoi/ytdl-lib/v2"
 )
 
 var testDownloader = func() (dl Downloader) {
