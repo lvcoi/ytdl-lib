@@ -36,7 +36,6 @@ func TestDownload_FirstStream(t *testing.T) {
 
 	assert.Equal("Rick Astley - Never Gonna Give You Up (Official Music Video)", video.Title)
 	assert.Equal("Rick Astley", video.Author)
-	assert.Greater(len(video.Formats), 0)
 
 	if assert.Greater(len(video.Formats), 0) {
 		assert.NoError(testDownloader.Download(ctx, video, &video.Formats[0], ""))
