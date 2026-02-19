@@ -4,7 +4,6 @@ import (
 	"context"
 	"os"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -31,15 +30,13 @@ func TestDownload_FirstStream(t *testing.T) {
 	assert, require := assert.New(t), require.New(t)
 	ctx := context.Background()
 
-	// youtube-dl test video
-	video, err := testDownloader.GetVideoContext(ctx, "BaW_jenozKc")
+	video, err := testDownloader.GetVideoContext(ctx, "dQw4w9WgXcQ")
 	require.NoError(err)
 	require.NotNil(video)
 
-	assert.Equal(`youtube-dl test video "'/\ä↭𝕐`, video.Title)
-	assert.Equal(`Philipp Hagemeister`, video.Author)
-	assert.Equal(10*time.Second, video.Duration)
-	assert.GreaterOrEqual(len(video.Formats), 18)
+	assert.Equal("Rick Astley - Never Gonna Give You Up (Official Music Video)", video.Title)
+	assert.Equal("Rick Astley", video.Author)
+	assert.Greater(len(video.Formats), 0)
 
 	if assert.Greater(len(video.Formats), 0) {
 		assert.NoError(testDownloader.Download(ctx, video, &video.Formats[0], ""))

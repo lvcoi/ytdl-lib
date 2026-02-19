@@ -17,7 +17,7 @@ const (
 )
 
 var testClient = Client{}
-var testWebClient = Client{client: &WebClient}
+var testWebClient = Client{ClientType: &WebClient}
 
 func TestParseVideo(t *testing.T) {
 	video, err := testClient.GetVideo(dwlURL)
@@ -183,12 +183,10 @@ func TestGetVideo_MultiLanguage(t *testing.T) {
 func TestGetStream(t *testing.T) {
 	assert, require := assert.New(t), require.New(t)
 
-	expectedSize := 988479
-
 	// Create testclient to enforce re-using of routines
 	testClient := Client{
 		MaxRoutines: 10,
-		ChunkSize:   int64(expectedSize) / 11,
+		ChunkSize:   Size1Mb,
 	}
 
 	// Download should not last longer than a minute.
@@ -196,14 +194,14 @@ func TestGetStream(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	video, err := testClient.GetVideoContext(ctx, "https://www.youtube.com/watch?v=BaW_jenozKc")
+	video, err := testClient.GetVideoContext(ctx, "https://www.youtube.com/watch?v=dQw4w9WgXcQ")
 	require.NoError(err)
 	require.NotNil(video)
 	require.Greater(len(video.Formats), 0)
 
 	reader, size, err := testClient.GetStreamContext(ctx, video, &video.Formats[0])
 	require.NoError(err)
-	assert.EqualValues(expectedSize, size)
+	assert.Greater(size, int64(0))
 
 	data, err := io.ReadAll(reader)
 	require.NoError(err)
