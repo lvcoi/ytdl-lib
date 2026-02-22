@@ -22,12 +22,12 @@ func (e constError) Error() string {
 	return string(e)
 }
 
-type ErrPlayabiltyStatus struct {
+type ErrPlayabilityStatus struct {
 	Status string
 	Reason string
 }
 
-func (err ErrPlayabiltyStatus) Error() string {
+func (err ErrPlayabilityStatus) Error() string {
 	return fmt.Sprintf("cannot playback and download, status: %s, reason: %s", err.Status, err.Reason)
 }
 

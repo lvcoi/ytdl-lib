@@ -13,6 +13,7 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"time"
 )
@@ -51,6 +52,7 @@ type Client struct {
 
 	consentID string
 
+	visitorMu sync.Mutex
 	visitorId struct {
 		value   string
 		updated time.Time
@@ -136,7 +138,7 @@ type innertubeRequest struct {
 	VideoID         string            `json:"videoId,omitempty"`
 	BrowseID        string            `json:"browseId,omitempty"`
 	Continuation    string            `json:"continuation,omitempty"`
-	Context         inntertubeContext `json:"context"`
+	Context         innertubeContext `json:"context"`
 	PlaybackContext *playbackContext  `json:"playbackContext,omitempty"`
 	ContentCheckOK  bool              `json:"contentCheckOk,omitempty"`
 	RacyCheckOk     bool              `json:"racyCheckOk,omitempty"`
@@ -152,7 +154,7 @@ type contentPlaybackContext struct {
 	HTML5Preference string `json:"html5Preference"`
 }
 
-type inntertubeContext struct {
+type innertubeContext struct {
 	Client innertubeClient `json:"client"`
 }
 
@@ -183,9 +185,9 @@ var (
 	// WebClient, better to use Android client but go ahead.
 	WebClient = ClientInfo{
 		Name:      "WEB",
-		Version:   "2.20220801.00.00",
+		Version:   "2.20250120.01.00",
 		Key:       "AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8",
-		UserAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+		UserAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
 	}
 
 	// AndroidClient, download go brrrrrr.
@@ -269,8 +271,8 @@ func randomVisitorData(countryCode string) string {
 	return pb.ToURLEncodedBase64()
 }
 
-func prepareInnertubeContext(clientInfo ClientInfo) inntertubeContext {
-	return inntertubeContext{
+func prepareInnertubeContext(clientInfo ClientInfo) innertubeContext {
+	return innertubeContext{
 		Client: innertubeClient{
 			HL:                "en",
 			GL:                "US",
@@ -612,17 +614,15 @@ func (c *Client) httpPost(ctx context.Context, url string, body interface{}) (*h
 		return nil, err
 	}
 
-	if resp.StatusCode != http.StatusOK {
-		resp.Body.Close()
-		return nil, ErrUnexpectedStatusCode(resp.StatusCode)
-	}
-
 	return resp, nil
 }
 
 var VisitorIdMaxAge = 10 * time.Hour
 
 func (c *Client) getVisitorId() (string, error) {
+	c.visitorMu.Lock()
+	defer c.visitorMu.Unlock()
+
 	var err error
 	if c.visitorId.value == "" || time.Since(c.visitorId.updated) > VisitorIdMaxAge {
 		err = c.refreshVisitorId()
@@ -650,7 +650,7 @@ func (c *Client) refreshVisitorId() error {
 	}
 	_, data1, found := strings.Cut(string(data), sep)
 	if !found {
-		return err
+		return fmt.Errorf("unable to find ytcfg.set in YouTube homepage response")
 	}
 	var value struct {
 		InnertubeContext struct {
@@ -717,13 +717,10 @@ func (c *Client) doDownloadChunk(req *http.Request, chunk *chunk) error {
 	defer resp.Body.Close()
 
 	expected := int(chunk.end-chunk.start) + 1
-	data, err := io.ReadAll(resp.Body)
+	data := make([]byte, expected)
+	n, err := io.ReadFull(resp.Body, data)
 	if err != nil {
-		return err
-	}
-
-	if len(data) != expected {
-		return fmt.Errorf("chunk at offset %d has invalid size: expected=%d actual=%d", chunk.start, expected, len(data))
+		return fmt.Errorf("chunk at offset %d: read %d/%d bytes: %w", chunk.start, n, expected, err)
 	}
 
 	chunk.data <- data

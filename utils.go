@@ -2,8 +2,7 @@ package youtube
 
 import (
 	"encoding/base64"
-
-	sjson "github.com/bitly/go-simplejson"
+	"encoding/json"
 )
 
 type chunk struct {
@@ -27,65 +26,106 @@ func getChunks(totalSize, chunkSize int64) []chunk {
 	return chunks
 }
 
-func getFirstKeyJSON(j *sjson.Json) *sjson.Json {
-	m, err := j.Map()
-	if err != nil {
-		return j
+// jsonGet navigates a json.RawMessage by object keys.
+// Returns nil if the path doesn't exist or the data isn't an object.
+func jsonGet(data json.RawMessage, keys ...string) json.RawMessage {
+	current := data
+	for _, key := range keys {
+		var obj map[string]json.RawMessage
+		if json.Unmarshal(current, &obj) != nil {
+			return nil
+		}
+		val, ok := obj[key]
+		if !ok {
+			return nil
+		}
+		current = val
 	}
-
-	for key := range m {
-		return j.Get(key)
-	}
-
-	return j
+	return current
 }
 
-func isValidJSON(j *sjson.Json) bool {
-	b, err := j.MarshalJSON()
-	if err != nil {
+// jsonGetIndex gets an element from a JSON array by index.
+// Returns nil if the data isn't an array or the index is out of bounds.
+func jsonGetIndex(data json.RawMessage, idx int) json.RawMessage {
+	var arr []json.RawMessage
+	if json.Unmarshal(data, &arr) != nil || idx < 0 || idx >= len(arr) {
+		return nil
+	}
+	return arr[idx]
+}
+
+// jsonString extracts a string from a json.RawMessage.
+// Returns empty string if the data isn't a JSON string.
+func jsonString(data json.RawMessage) string {
+	var s string
+	if json.Unmarshal(data, &s) != nil {
+		return ""
+	}
+	return s
+}
+
+// jsonHasContent returns true if the data is non-nil and represents
+// something more substantial than null, empty string, empty array, or empty object.
+func jsonHasContent(data json.RawMessage) bool {
+	if len(data) <= 4 {
 		return false
 	}
-
-	if len(b) <= 4 {
-		return false
-	}
-
 	return true
 }
 
-func sjsonGetText(j *sjson.Json, paths ...string) string {
+// jsonFirstKey returns the value of the first key in a JSON object.
+// Returns the original data if it's not an object.
+func jsonFirstKey(data json.RawMessage) json.RawMessage {
+	var obj map[string]json.RawMessage
+	if json.Unmarshal(data, &obj) != nil {
+		return data
+	}
+	for _, v := range obj {
+		return v
+	}
+	return data
+}
+
+// jsonGetText tries to extract text from a YouTube JSON node.
+// It traverses the given paths, then looks for a plain string, "text" field, or "runs" array.
+func jsonGetText(data json.RawMessage, paths ...string) string {
+	current := data
 	for _, path := range paths {
-		if isValidJSON(j.Get(path)) {
-			j = j.Get(path)
+		if next := jsonGet(current, path); jsonHasContent(next) {
+			current = next
 		}
 	}
 
-	if text, err := j.String(); err == nil {
-		return text
+	// Try direct string
+	if s := jsonString(current); s != "" {
+		return s
 	}
 
-	if isValidJSON(j.Get("text")) {
-		return j.Get("text").MustString()
+	// Try .text
+	if textNode := jsonGet(current, "text"); jsonHasContent(textNode) {
+		return jsonString(textNode)
 	}
 
-	if p := j.Get("runs"); isValidJSON(p) {
-		var text string
-
-		for i := 0; i < len(p.MustArray()); i++ {
-			if textNode := p.GetIndex(i).Get("text"); isValidJSON(textNode) {
-				text += textNode.MustString()
+	// Try .runs[].text
+	if runsNode := jsonGet(current, "runs"); jsonHasContent(runsNode) {
+		var runs []json.RawMessage
+		if json.Unmarshal(runsNode, &runs) == nil {
+			var text string
+			for _, run := range runs {
+				if t := jsonGet(run, "text"); jsonHasContent(t) {
+					text += jsonString(t)
+				}
 			}
+			return text
 		}
-
-		return text
 	}
 
 	return ""
 }
 
-func getContinuation(j *sjson.Json) string {
-	return j.GetPath("continuations").
-		GetIndex(0).GetPath("nextContinuationData", "continuation").MustString()
+// jsonGetContinuation extracts the continuation token from a YouTube JSON node.
+func jsonGetContinuation(data json.RawMessage) string {
+	return jsonString(jsonGet(jsonGetIndex(jsonGet(data, "continuations"), 0), "nextContinuationData", "continuation"))
 }
 
 func base64PadEnc(str string) string {

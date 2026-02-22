@@ -4,7 +4,7 @@ import (
 	"time"
 )
 
-const defaultCacheExpiration = time.Minute * time.Duration(5)
+const defaultCacheExpiration = 2 * time.Hour
 
 type playerCache struct {
 	key       string

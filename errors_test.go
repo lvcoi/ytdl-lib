@@ -15,7 +15,7 @@ func TestErrors(t *testing.T) {
 		expected string
 	}{
 		{ErrUnexpectedStatusCode(404), "unexpected status code: 404"},
-		{ErrPlayabiltyStatus{"invalid", "for that reason"}, "cannot playback and download, status: invalid, reason: for that reason"},
+		{ErrPlayabilityStatus{"invalid", "for that reason"}, "cannot playback and download, status: invalid, reason: for that reason"},
 		{ErrPlaylistStatus{"for that reason"}, "could not load playlist: for that reason"},
 	}
 	for i, tt := range tests {

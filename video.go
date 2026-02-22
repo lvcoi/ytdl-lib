@@ -89,7 +89,7 @@ func (v *Video) isVideoDownloadable(prData playerResponseData, isVideoPage bool)
 		return ErrNotPlayableInEmbed
 	}
 
-	return &ErrPlayabiltyStatus{
+	return &ErrPlayabilityStatus{
 		Status: prData.PlayabilityStatus.Status,
 		Reason: prData.PlayabilityStatus.Reason,
 	}
