@@ -2,6 +2,7 @@ package youtube
 
 import (
 	"io"
+	"net/http"
 	"testing"
 	"time"
 
@@ -247,6 +248,28 @@ func TestGetBigPlaylist(t *testing.T) {
 	assert.NotEmpty(playlist.Videos[300].ID)
 
 	t.Logf("Playlist Title: %s, Video Count: %d", playlist.Title, len(playlist.Videos))
+}
+
+func TestDownloadChunk_CancelledContext(t *testing.T) {
+	// A cancelled context should cause downloadChunk to return promptly
+	// without sleeping through retry backoff.
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel() // cancel immediately
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, "http://localhost:1/fake", nil)
+	require.NoError(t, err)
+
+	ch := &chunk{start: 0, end: 99, data: make(chan []byte, 1)}
+	client := &Client{}
+	client.assureClient()
+
+	start := time.Now()
+	err = client.downloadChunk(req, ch)
+	elapsed := time.Since(start)
+
+	assert.Error(t, err)
+	// Should return almost immediately, not after retry backoff (1.5s total)
+	assert.Less(t, elapsed, 500*time.Millisecond)
 }
 
 func TestClient_httpGetBodyBytes(t *testing.T) {

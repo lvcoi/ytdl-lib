@@ -64,10 +64,14 @@ func jsonString(data json.RawMessage) string {
 	return s
 }
 
-// jsonHasContent returns true if the data is non-nil and represents
-// something more substantial than null, empty string, empty array, or empty object.
+// jsonHasContent returns true if the data is non-nil and not one of
+// the empty JSON values: null, "", [], {}.
 func jsonHasContent(data json.RawMessage) bool {
-	if len(data) <= 4 {
+	if len(data) == 0 {
+		return false
+	}
+	switch string(data) {
+	case "null", `""`, "[]", "{}":
 		return false
 	}
 	return true
@@ -87,11 +91,11 @@ func jsonFirstKey(data json.RawMessage) json.RawMessage {
 }
 
 // jsonGetText tries to extract text from a YouTube JSON node.
-// It traverses the given paths, then looks for a plain string, "text" field, or "runs" array.
+// Each path is tried as an alternative key on the original data; the last match wins.
 func jsonGetText(data json.RawMessage, paths ...string) string {
 	current := data
 	for _, path := range paths {
-		if next := jsonGet(current, path); jsonHasContent(next) {
+		if next := jsonGet(data, path); jsonHasContent(next) {
 			current = next
 		}
 	}

@@ -693,7 +693,11 @@ func (c *Client) downloadChunk(req *http.Request, chunk *chunk) error {
 
 	for attempt := 0; attempt < maxRetries; attempt++ {
 		if attempt > 0 {
-			time.Sleep(time.Duration(attempt) * 500 * time.Millisecond)
+			select {
+			case <-req.Context().Done():
+				return req.Context().Err()
+			case <-time.After(time.Duration(attempt) * 500 * time.Millisecond):
+			}
 		}
 
 		lastErr = c.doDownloadChunk(req.Clone(req.Context()), chunk)
