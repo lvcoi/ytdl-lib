@@ -1,0 +1,19 @@
+{
+	"name": "ytdl-lib",
+	"build": {
+		"context": ".",
+		"dockerfile": "Dockerfile"
+	},
+	"features": {
+		"ghcr.io/devcontainers/features/go": {
+			"version": "1.23"
+		}
+	},
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"golang.go"
+			]
+		}
+	}
+}

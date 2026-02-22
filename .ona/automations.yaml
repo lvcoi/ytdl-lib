@@ -1,0 +1,43 @@
+tasks:
+  install-deps:
+    name: Install dependencies
+    description: Download Go module dependencies.
+    command: |
+      go mod download
+    triggeredBy:
+      - prebuild
+      - postDevcontainerStart
+
+  build:
+    name: Build
+    description: Build the youtubedr CLI binary.
+    command: |
+      go build -o youtubedr ./cmd/youtubedr
+    triggeredBy:
+      - postDevcontainerStart
+    dependsOn:
+      - install-deps
+
+  lint:
+    name: Lint
+    description: Run golangci-lint and go vet.
+    command: |
+      make lint
+    triggeredBy:
+      - manual
+
+  test-unit:
+    name: Unit tests
+    description: Run all unit tests with coverage.
+    command: |
+      make test-unit
+    triggeredBy:
+      - manual
+
+  test-integration:
+    name: Integration tests
+    description: Run integration tests with race detection and coverage.
+    command: |
+      make test-integration
+    triggeredBy:
+      - manual
