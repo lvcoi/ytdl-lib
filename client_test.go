@@ -17,7 +17,7 @@ const (
 )
 
 var testClient = Client{}
-var testWebClient = Client{client: &WebClient}
+var testWebClient = Client{ClientType: &WebClient}
 
 func TestParseVideo(t *testing.T) {
 	video, err := testClient.GetVideo(dwlURL)
