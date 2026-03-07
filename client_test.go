@@ -17,7 +17,7 @@ const (
 )
 
 var testClient = Client{}
-var testWebClient = Client{client: &WebClient}
+var testWebClient = Client{ClientType: &WebClient}
 
 func TestParseVideo(t *testing.T) {
 	video, err := testClient.GetVideo(dwlURL)
@@ -25,7 +25,7 @@ func TestParseVideo(t *testing.T) {
 	assert.NotNil(t, video)
 
 	_, err = testClient.GetVideo(errURL)
-	assert.IsType(t, err, &ErrPlayabiltyStatus{})
+	assert.IsType(t, &ErrPlayabiltyStatus{}, err)
 }
 
 func TestYoutube_findVideoID(t *testing.T) {
@@ -172,7 +172,7 @@ func TestGetVideo_MultiLanguage(t *testing.T) {
 	}
 
 	assert.Contains(languageNames, "English original")
-	assert.Contains(languageNames, "Portuguese (Brazil)")
+	assert.Contains(languageNames, "Portuguese (BR)")
 	assert.Contains(lanaguageIDs, "en.4")
 	assert.Contains(lanaguageIDs, "pt-BR.3")
 
@@ -217,16 +217,16 @@ func TestGetPlaylist(t *testing.T) {
 	require.NoError(err)
 	require.NotNil(playlist)
 
-	assert.Equal(playlist.Title, "Test Playlist")
-	assert.Equal(playlist.Description, "")
-	assert.Equal(playlist.Author, "GoogleVoice")
-	assert.Equal(len(playlist.Videos), 8)
+	assert.Equal("Test Playlist", playlist.Title)
+	assert.Equal("", playlist.Description)
+	assert.Equal("GoogleVoice", playlist.Author)
+	assert.Equal(8, len(playlist.Videos))
 
 	v := playlist.Videos[7]
-	assert.Equal(v.ID, "dsUXAEzaC3Q")
-	assert.Equal(v.Title, "Michael Jackson - Bad (Shortened Version)")
-	assert.Equal(v.Author, "Michael Jackson")
-	assert.Equal(v.Duration, 4*time.Minute+20*time.Second)
+	assert.Equal("dsUXAEzaC3Q", v.ID)
+	assert.Equal("Michael Jackson - Bad (Shortened Version)", v.Title)
+	assert.Equal("Michael Jackson", v.Author)
+	assert.Equal(4*time.Minute+20*time.Second, v.Duration)
 
 	assert.NotEmpty(v.Thumbnails)
 	assert.NotEmpty(v.Thumbnails[0].URL)

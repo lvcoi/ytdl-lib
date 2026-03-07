@@ -85,14 +85,12 @@ func (p *Playlist) parsePlaylistInfo(ctx context.Context, client *Client, body [
 	// Metadata can be located in multiple places depending on client type
 	var metadata *sjson.Json
 	if node, ok := j.CheckGet("metadata"); ok {
-		metadata = node
+		metadata = node.Get("playlistMetadataRenderer")
 	} else if node, ok := j.CheckGet("header"); ok {
-		metadata = node
+		metadata = node.Get("playlistHeaderRenderer")
 	} else {
 		return fmt.Errorf("no playlist header / metadata found")
 	}
-
-	metadata = metadata.Get("playlistHeaderRenderer")
 
 	p.Title = sjsonGetText(metadata, "title")
 	p.Description = sjsonGetText(metadata, "description", "descriptionText")
