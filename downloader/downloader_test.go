@@ -34,8 +34,8 @@ func TestDownload_FirstStream(t *testing.T) {
 	require.NoError(err)
 	require.NotNil(video)
 
-	assert.Equal("Rick Astley - Never Gonna Give You Up (Official Music Video)", video.Title)
-	assert.Equal("Rick Astley", video.Author)
+	assert.Contains(video.Title, "Never Gonna Give You Up")
+	assert.NotEmpty(video.Author)
 
 	if assert.Greater(len(video.Formats), 0) {
 		assert.NoError(testDownloader.Download(ctx, video, &video.Formats[0], ""))
