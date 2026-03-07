@@ -1,12 +1,16 @@
 package youtube
 
 import (
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 )
 
 func TestYoutube_GetItagInfo(t *testing.T) {
+	if os.Getenv("YTDL_RUN_LIVE_IT") != "1" {
+		t.Skip("skipping live YouTube integration test (set YTDL_RUN_LIVE_IT=1 to run)")
+	}
 	require := require.New(t)
 	client := Client{}
 

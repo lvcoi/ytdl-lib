@@ -1,6 +1,7 @@
 package youtube
 
 import (
+	"os"
 	"strconv"
 	"testing"
 
@@ -8,6 +9,9 @@ import (
 )
 
 func TestTranscript(t *testing.T) {
+	if os.Getenv("YTDL_RUN_LIVE_IT") != "1" {
+		t.Skip("skipping live YouTube integration test (set YTDL_RUN_LIVE_IT=1 to run)")
+	}
 	video := &Video{ID: "9_MbW9FK1fA"}
 
 	transcript, err := testClient.GetTranscript(video, "en")
@@ -30,6 +34,9 @@ func TestTranscript(t *testing.T) {
 }
 
 func TestTranscriptOtherLanguage(t *testing.T) {
+	if os.Getenv("YTDL_RUN_LIVE_IT") != "1" {
+		t.Skip("skipping live YouTube integration test (set YTDL_RUN_LIVE_IT=1 to run)")
+	}
 	video := &Video{ID: "AXwDvYh2-uk"}
 
 	transcript, err := testClient.GetTranscript(video, "id")

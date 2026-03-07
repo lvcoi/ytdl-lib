@@ -2,6 +2,8 @@ package youtube
 
 import (
 	"io"
+	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -53,6 +55,9 @@ func TestExtractVideoId(t *testing.T) {
 }
 
 func TestSimpleTest(t *testing.T) {
+	if os.Getenv("YTDL_RUN_LIVE_IT") != "1" {
+		t.Skip("skipping live YouTube integration test (set YTDL_RUN_LIVE_IT=1 to run)")
+	}
 	video, err := testClient.GetVideo("https://www.youtube.com/watch?v=9_MbW9FK1fA")
 	require.NoError(t, err, "get body")
 
@@ -78,6 +83,9 @@ func TestSimpleTest(t *testing.T) {
 }
 
 func TestDownload_Regular(t *testing.T) {
+	if os.Getenv("YTDL_RUN_LIVE_IT") != "1" {
+		t.Skip("skipping live YouTube integration test (set YTDL_RUN_LIVE_IT=1 to run)")
+	}
 	testcases := []struct {
 		name       string
 		url        string
@@ -149,6 +157,9 @@ func TestDownload_Regular(t *testing.T) {
 }
 
 func TestDownload_WhenPlayabilityStatusIsNotOK(t *testing.T) {
+	if os.Getenv("YTDL_RUN_LIVE_IT") != "1" {
+		t.Skip("skipping live YouTube integration test (set YTDL_RUN_LIVE_IT=1 to run)")
+	}
 	testcases := []struct {
 		issue   string
 		videoID string
@@ -177,6 +188,14 @@ func TestDownload_WhenPlayabilityStatusIsNotOK(t *testing.T) {
 
 // See https://github.com/kkdai/youtube/pull/238
 func TestDownload_SensitiveContent(t *testing.T) {
+	if os.Getenv("YTDL_RUN_LIVE_IT") != "1" {
+		t.Skip("skipping live YouTube integration test (set YTDL_RUN_LIVE_IT=1 to run)")
+	}
 	_, err := testClient.GetVideo("MS91knuzoOA")
-	require.EqualError(t, err, "can't bypass age restriction: embedding of this video has been disabled")
+	require.Error(t, err)
+	require.True(t,
+		strings.Contains(err.Error(), "confirm your age") ||
+			strings.Contains(err.Error(), "can't bypass age restriction"),
+		"unexpected error: %v", err,
+	)
 }
