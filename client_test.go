@@ -186,7 +186,8 @@ func TestGetStream(t *testing.T) {
 	// Create testclient to enforce re-using of routines
 	testClient := Client{
 		MaxRoutines: 10,
-		ChunkSize:   Size1Mb,
+		// Use a small chunk size to force multi-chunk downloads and exercise the multi-routine path.
+		ChunkSize: 32 * 1024, // 32 KiB
 	}
 
 	// Download should not last longer than a minute.
