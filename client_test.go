@@ -2,6 +2,7 @@ package youtube
 
 import (
 	"io"
+	"os"
 	"testing"
 	"time"
 
@@ -19,7 +20,15 @@ const (
 var testClient = Client{}
 var testWebClient = Client{ClientType: &WebClient}
 
+func skipLiveTest(t *testing.T) {
+	t.Helper()
+	if os.Getenv("YTDL_RUN_LIVE_IT") != "1" {
+		t.Skip("skipping live YouTube integration test (set YTDL_RUN_LIVE_IT=1 to run)")
+	}
+}
+
 func TestParseVideo(t *testing.T) {
+	skipLiveTest(t)
 	video, err := testClient.GetVideo(dwlURL)
 	assert.NoError(t, err)
 	assert.NotNil(t, video)
@@ -81,6 +90,7 @@ func TestYoutube_findVideoID(t *testing.T) {
 }
 
 func TestGetVideoWithoutManifestURL(t *testing.T) {
+	skipLiveTest(t)
 	assert, require := assert.New(t), require.New(t)
 
 	video, err := testClient.GetVideo(dwlURL)
@@ -108,6 +118,7 @@ func TestGetVideoWithoutManifestURL(t *testing.T) {
 }
 
 func TestWebClientGetVideoWithoutManifestURL(t *testing.T) {
+	skipLiveTest(t)
 	assert, require := assert.New(t), require.New(t)
 
 	video, err := testWebClient.GetVideo(dwlURL)
@@ -137,6 +148,7 @@ func TestWebClientGetVideoWithoutManifestURL(t *testing.T) {
 }
 
 func TestGetVideoWithManifestURL(t *testing.T) {
+	skipLiveTest(t)
 	assert, require := assert.New(t), require.New(t)
 
 	video, err := testClient.GetVideo(streamURL)
@@ -157,6 +169,7 @@ func TestGetVideoWithManifestURL(t *testing.T) {
 }
 
 func TestGetVideo_MultiLanguage(t *testing.T) {
+	skipLiveTest(t)
 	assert, require := assert.New(t), require.New(t)
 	video, err := testClient.GetVideo("https://www.youtube.com/watch?v=pU9sHwNKc2c")
 	require.NoError(err)
@@ -181,6 +194,7 @@ func TestGetVideo_MultiLanguage(t *testing.T) {
 }
 
 func TestGetStream(t *testing.T) {
+	skipLiveTest(t)
 	assert, require := assert.New(t), require.New(t)
 
 	expectedSize := 988479
@@ -211,6 +225,7 @@ func TestGetStream(t *testing.T) {
 }
 
 func TestGetPlaylist(t *testing.T) {
+	skipLiveTest(t)
 	assert, require := assert.New(t), require.New(t)
 
 	playlist, err := testClient.GetPlaylist("https://www.youtube.com/playlist?list=PL59FEE129ADFF2B12")
@@ -233,6 +248,7 @@ func TestGetPlaylist(t *testing.T) {
 }
 
 func TestGetBigPlaylist(t *testing.T) {
+	skipLiveTest(t)
 	assert, require := assert.New(t), require.New(t)
 
 	playlist, err := testClient.GetPlaylist("https://www.youtube.com/playlist?list=PLTC7VQ12-9raqhLCx1S1E_ic35t94dj28")
