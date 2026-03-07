@@ -195,7 +195,7 @@ func TestGetStream(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	video, err := testClient.GetVideoContext(ctx, "https://www.youtube.com/watch?v=dQw4w9WgXcQ")
+	video, err := testClient.GetVideoContext(ctx, streamURL)
 	require.NoError(err)
 	require.NotNil(video)
 	require.Greater(len(video.Formats), 0)
